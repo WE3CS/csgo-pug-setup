@@ -4,6 +4,7 @@ csgo-pug-setup
 [![Build status](http://ci.splewis.net/job/csgo-pug-setup/badge/icon)](http://ci.splewis.net/job/csgo-pug-setup/)
 [![GitHub Downloads](https://img.shields.io/github/downloads/splewis/csgo-pug-setup/total.svg?style=flat-square&label=Downloads)](https://github.com/splewis/csgo-pug-setup/releases/latest)
 
+**插件作者：[Splewis(https://github.com/splewis/).**
 **Status: Supported.**
 
 This is a useful plugin for managing pug games, especially **10 mans**/gathers. It allows a player to type **.setup** into chat and select (from a menu):
