@@ -3,488 +3,616 @@
 	"SetupMenuTitle"
 	{
 		"en"		"Setup options"
+		"chi"		"设置选项"
 	}
 	"MapTypeOption"
 	{
 		"en"		"Map type"
+		"chi"		"地图类型"
 	}
 	"TeamTypeOption"
 	{
 		"en"		"Team type"
+		"chi"		"队伍类型"
 	}
 	"TeamSizeOption"
 	{
 		"en"		"Team size"
+		"chi"		"队伍人数"
 	}
 	"DemoOption"
 	{
 		"en"		"Record demo"
+		"chi"		"录制DEMO"
 	}
 	"AutoLiveOption"
 	{
 		"en"		"Autolive"
+		"chi"		"自动开始"
 	}
 	"VetoMessage"
 	{
 		"en"		"The map veto process will begin in a few seconds."
+		"chi"		"选图将在几秒钟后自动开始"
 	}
 	"VoteMessage"
 	{
 		"en"		"The map voting will begin in a few seconds."
+		"chi"		"地图投票将在几秒钟后自动开始"
 	}
 	"AlreadyLive"
 	{
 		"en"		"The game is already live!"
-	}
-	"ReadyStatusPlayers"
-	{
-		"#format"	"{1:i},{2:i}"
-		"en"		"{1} out of {2} players are ready"
+		"chi"		"比赛正在进行"
 	}
 	"ReadyStatus"
 	{
 		"#format"	"{1:i},{2:i},{3:s}"
 		"en"		"{1} out of {2} players are ready\nType {3} to ready up"
+		"chi"		"{1}/{2}个玩家已准备就绪\n请输入 {3} 来完成准备"
 	}
 	"ReadyStatusCaptains"
 	{
 		"#format"	"{1:i},{2:i},{3:s},{4:s}"
 		"en"		"{1} out of {2} players are ready\nCaptain 1: {3}\nCaptain 2: {4}"
-	}
-	"ReadyStatusAllReadyPick"
-	{
-		"en"		"Starting player picking..."
-	}
-	"ReadyStatusAllReady"
-	{
-		"en"		"Starting match..."
-	}
-	"ReadyStatusAllReadyWaiting"
-	{
-		"en"		"Waiting to start..."
-	}
-	"ReadyStatusAllReadyVeto"
-	{
-		"en"		"Starting map veto process..."
-	}
-	"ReadyStatusAllReadyVote"
-	{
-		"en"		"Starting map voting..."
+		"chi"		"{1}/{2}个玩家已准备就绪\n队长1: {3}\n队长2: {4}"
 	}
 	"CaptainNotSelected"
 	{
 		"en"		"not selected"
+		"chi"		"未做任何选择"
 	}
 	"SetCaptainsHint"
 	{
 		"#format"		"{1:N},{2:s}"
 		"en"		"Waiting for {GREEN}{1} {NORMAL}to type {GREEN}{2} {NORMAL}to select captains."
+		"chi"		"等待 {GREEN}{1} {NORMAL}输入 {GREEN}{2} {NORMAL}来选择队长"
 	}
 	"ReadyCommandHint"
 	{
 		"#format"		"{1:s}"
 		"en"		"You still need to ready up by typing {GREEN}{1}"
+		"chi"		"你仍然需要输入 {GREEN}{1} 来完成准备"
 	}
 	"NoPermission"
 	{
 		"en"		"You don't have permission to do that."
+		"chi"		"你没有操作权限"
 	}
 	"NotUsingCaptains"
 	{
 		"en"		"This game isn't using team captains."
+		"chi"		"本比赛没有采取队长制"
 	}
 	"Scrambling"
 	{
 		"en"		"{GREEN}Scrambling the teams!"
+		"chi"		"{GREEN}争夺了队伍"
 	}
 	"ForceEnd"
 	{
 		"#format"	"{1:N}"
 		"en"		"The match was force-ended by {GREEN}{1}{NORMAL}."
+		"chi"		"比赛被 {GREEN}{1}{NORMAL} 强制结束"
 	}
 	"Pause"
 	{
 		"#format"	"{1:N}"
 		"en"		"{GREEN}{1} {NORMAL}has called for a pause."
+		"chi"		"{GREEN}{1} {NORMAL}请求暂停"
 	}
 	"Unpause"
 	{
 		"#format"	"{1:N}"
 		"en"		"{GREEN}{1} {NORMAL}has unpaused."
+		"chi"		"{GREEN}{1} {NORMAL}取消暂停"
 	}
 	"SetupBy"
 	{
 		"#format"	"{1:N}"
 		"en"		"Pug leader: {GREEN}{1}"
+		"chi"		"满十发起人: {GREEN}{1}"
 	}
 	"NewLeader"
 	{
 		"#format"		"{1:N}"
 		"en"		"The new leader is {GREEN}{1}"
+		"chi"		"新的发起人现在是 {GREEN}{1}"
 	}
 	"CaptMessage"
 	{
 		"#format"		"{1:d},{2:s}"
 		"en"		"Captain {1} will be {2}"
+		"chi"		"队长 {1} 将会是 {2}"
 	}
 	"TeamSetupMenuTitle"
 	{
 		"en"		"How will teams be setup?"
+		"chi"		"队伍如何设置"
 	}
 	"TeamSetupMenuCaptains"
 	{
 		"en"		"Assigned captains pick their teams"
+		"chi"		"由队长选择队伍"
 	}
 	"TeamSetupMenuRandom"
 	{
 		"en"		"Random teams"
+		"chi"		"随机队伍"
 	}
 	"TeamSetupMenuManual"
 	{
 		"en"		"Players manually switch teams"
+		"chi"		"玩家手动选择队伍"
 	}
 	"TeamSetupCaptainsShort"
 	{
 		"en"		"captains pick players"
+		"chi"		"队长挑人"
 	}
 	"TeamSetupRandomShort"
 	{
 		"en"		"random teams"
+		"chi"		"随机队伍"
 	}
 	"TeamSetupManualShort"
 	{
 		"en"		"manually switch"
+		"chi"		"手动调整"
 	}
 	"HowManyPlayers"
 	{
 		"en"		"How many players per team?"
+		"chi"		"队伍人数多少"
 	}
 	"MapChoiceMenuTitle"
 	{
 		"en"		"How should the map be chosen?"
+		"chi"		"如何选图"
 	}
 	"MapChoiceCurrent"
 	{
 		"en"		"Use the current map"
+		"chi"		"使用当前地图"
 	}
 	"MapChoiceVote"
 	{
 		"en"		"Vote for a map"
+		"chi"		"投票选图"
 	}
 	"MapChoiceVeto"
 	{
 		"en"		"Captains veto maps until 1 left"
+		"chi"		"队长选图直到只剩1个"
 	}
 	"MapChoiceCurrentShort"
 	{
 		"en"		"use the current map"
+		"chi"		"使用当前地图"
 	}
 	"MapChoiceVoteShort"
 	{
 		"en"		"vote for a map"
+		"chi"		"投票选图"
 	}
 	"MapChoiceVetoShort"
 	{
 		"en"		"captains veto maps"
+		"chi"		"队长选图"
 	}
 	"Yes"
 	{
 		"en"		"yes"
+		"chi"		"是"
 	}
 	"No"
 	{
 		"en"		"no"
+		"chi"		"不"
 	}
 	"Enabled"
 	{
 		"en"		"enabled"
+		"chi"		"开启"
 	}
 	"Disabled"
 	{
 		"en"		"disabled"
+		"chi"		"关闭"
 	}
 	"InitialPickTitle"
 	{
 		"en"		"Which would you prefer:"
+		"chi"		"选择你的偏好:"
 	}
 	"InitialPickSides"
 	{
 		"en"		"Pick the starting sides"
+		"chi"		"开始选边"
 	}
 	"InitialPickPlayer"
 	{
 		"en"		"Pick the first player"
+		"chi"		"选择第一个玩家"
 	}
 	"InitialPickPlayerChoice"
 	{
 		"#format"	"{1:s}"
 		"en"		"{1} has elected to get the {GREEN}first player pick."
+		"chi"		"{1} 当选了 {GREEN}第一个玩家选择权"
 	}
 	"InitialPickSideChoice"
 	{
 		"#format"	"{1:s}"
 		"en"		"{1} has elected to pick the {GREEN}starting sides."
+		"chi"		"{1} 当选了 {GREEN}选边选择权"
 	}
 	"SideChoiceTitle"
 	{
 		"en"		"Which side do you want first:"
+		"chi"		"你想选择哪一边"
 	}
 	"SideChoiceSelected"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"{1} has picked {GREEN}{2} {NORMAL}first."
+		"chi"		"{1} 首先选择了 {GREEN}{2} {NORMAL}队伍"
 	}
 	"PlayerPickTitle"
 	{
 		"en"		"Pick your players:"
+		"chi"		"挑选你的队友"
 	}
 	"PlayerPickChoice"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"{1} has picked {2}."
+		"chi"		"{1} 选择了 {2}"
 	}
 	"SpecCantReady"
 	{
-		"en"		"You cannot ready up when you are on spectator."
+		"en"		"You cannot ready up whe you are on spectator."
+		"chi"		"当你在观察者时不能完成准备"
 	}
 	"RestartCounter"
 	{
 		"#format"	"{1:d}"
 		"en"		"Restart {1}/3"
+		"chi"		"比赛即将开始 {1}/3"
 	}
 	"Live"
 	{
 		"en"		"Match is {GREEN}LIVE"
+		"chi"		"比赛开始 {GREEN}LIVE！！！"
 	}
 	"VetoMenuTitle"
 	{
 		"en"		"Select a map to veto"
+		"chi"		"选择一个地图来投票"
 	}
 	"PlayerVetoed"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"{1} {NORMAL}vetoed {LIGHT_RED}{2}."
+		"chi"		"{1} {NORMAL}选择了 {LIGHT_RED}{2}."
 	}
 	"MapsLeft"
 	{
 		"en"		"Maps left:"
+		"chi"		"剩余地图:"
 	}
 	"VoteMenuTitle"
 	{
 		"en"		"Vote for a map"
+		"chi"		"投票一个地图"
 	}
 	"Random"
 	{
 		"en"		"Random"
+		"chi"		"随机"
 	}
 	"RandomMapVote"
 	{
 		"en"		"random"
+		"chi"		"随机"
 	}
 	"NotLiveYet"
 	{
 		"en"		"The match has not begun yet."
+		"chi"		"比赛还没开始"
 	}
 	"EndMatchMenuTitle"
 	{
 		"en"		"Are you sure you want to end the match?"
+		"chi"		"你确定要结束这场比赛吗"
 	}
 	"EndMatch"
 	{
 		"en"		"Yes, end the match"
+		"chi"		"是的，立即结束比赛"
 	}
 	"ContinueMatch"
 	{
 		"en"		"No, continue the match"
+		"chi"		"不，继续比赛"
 	}
 	"MutualUnpauseMessage"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"The {1} team wants to unpause, waiting for the {2} team to type {GREEN}{3}"
+		"chi"		"队伍 {1} 请求取消暂停，等待队伍 {2} 输入 {GREEN}{3}"
 	}
 	"CancelCountdownMessage"
 	{
 		"en"		"The match has been cancelled."
+		"chi"		"比赛已取消"
 	}
 	"Countdown"
 	{
 		"#format"	"{1:d}"
 		"en"		"Countdown: {GREEN}{1} {NORMAL}seconds"
+		"chi"		"倒计时: {GREEN}{1} {NORMAL}秒"
 	}
 	"Ready"
 	{
 		"en"		"[Ready]"
+		"chi"		"[已准备]"
 	}
 	"NotReady"
 	{
 		"en"		"[Not Ready]"
+		"chi"		"[未准备]"
 	}
 	"KnifeRound"
 	{
-		"en"		"KNIFE!"
+		"en"		"TASER BATTLE LIVE !!! YOU CAN USE ZEUS & FISTS ONLY IN THE ROUND。TAKE CARE OF FRIENDLYFIRE!"
+		"chi"		"{GREEN}群殴选边开始！{NORMAL}请注意本局仅能使用 {LIGHT_RED}电击枪{NORMAL}、{LIGHT_RED}拳头{NORMAL}。{GREEN}注意队伤！"
 	}
 	"KnifeRoundOption"
 	{
-		"en"		"Knife round"
+		"en"		"ZEUS & FISTS Battle Round"
+		"chi"		"群殴局"
 	}
 	"KnifeRoundWinner"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"The {1} team won the knife round. Waiting for them to type {GREEN}{2} {NORMAL}or {GREEN}{3}"
+		"chi"		"队伍 {1} 赢了群殴局. 等待他们输入 {GREEN}.ct {NORMAL}或 {GREEN}.t {NORMAL}来选边 "
 	}
 	"KnifeRoundWinnerVote"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"The {1} team won the knife round. Waiting for them to vote by typing {GREEN}{2} {NORMAL}or {GREEN}{3}"
+		"chi"		"队伍 {1} 赢了群殴局. 等待他们输入 {GREEN}.ct {NORMAL}或 {GREEN}.t {NORMAL}来选边"
 	}
 	"TVDisabled"
 	{
 		"en"		"GOTV is disabled, so a demo cannot be recorded. Set {GREEN}tv_enable 1{NORMAL} to enable GOTV."
+		"chi"		"GOTV 已禁用, 所以DEMO不会被录制. 管理员可设置 {GREEN}tv_enable 1{NORMAL} 来启用 GOTV."
 	}
 	"FinishSetup"
 	{
 		"en"		"Finish setup"
+		"chi"		"完成配置"
 	}
 	"CancelSetup"
 	{
 		"en"		"Cancel setup"
+		"chi"		"取消配置"
 	}
 	"Back"
 	{
 		"en"		"Back"
+		"chi"		"返回"
 	}
 	"sm_capt_alias"
 	{
 		"en"		".capt"
+		"chi"		".capt"
 	}
 	"sm_endgame_alias"
 	{
 		"en"		".endgame"
+		"chi"		".endgame"
 	}
 	"sm_notready_alias"
 	{
 		"en"		".notready"
+		"chi"		".notready"
 	}
 	"sm_pause_alias"
 	{
 		"en"		".pause"
+		"chi"		".pause"
 	}
 	"sm_ready_alias"
 	{
 		"en"		".ready"
+		"chi"		".ready"
 	}
 	"sm_setup_alias"
 	{
 		"en"		".setup"
+		"chi"		".setup"
 	}
 	"sm_stay_alias"
 	{
 		"en"		".stay"
+		"chi"		".stay"
 	}
 	"sm_swap_alias"
 	{
 		"en"		".swap"
+		"chi"		".swap"
 	}
 	"sm_unpause_alias"
 	{
 		"en"		".unpause"
+		"chi"		".unpause"
 	}
 	"sm_start_alias"
 	{
 		"en"		".start"
+		"chi"		".start"
 	}
 	"ChooseCaptainTitle"
 	{
 		"#format"	"{1:d}"
 		"en"		"Choose captain {1}:"
+		"chi"		"选择队长 {1}:"
 	}
 	"ChooseLeaderTitle"
 	{
 		"en"		"Choose the game leader:"
+		"chi"		"选择满十发起人:"
 	}
 	"WaitingForStart"
 	{
 		"#format"		"{1:N},{2:s}"
 		"en"		"All players are ready, waiting for {GREEN}{1} {NORMAL}to type {GREEN}{2}"
+		"chi"		"所有玩家均已准备, 等待 {GREEN}{1} {NORMAL}输入 {GREEN}{2}"
 	}
 	"StartMatchMenuOption"
 	{
 		"en"		"Start the match"
+		"chi"		"开始比赛"
 	}
 	"SetCaptainsMenuOption"
 	{
 		"en"		"Set captains"
+		"chi"		"设置队长"
 	}
 	"AimWarmupMenuOption"
 	{
 		"en"		"Use aim map warmup"
+		"chi"		"热身使用小地图"
 	}
 	"ChangeMapMenuOption"
 	{
 		"en"		"Change map"
+		"chi"		"换图"
 	}
 	"ChangeMapMenuTitle"
 	{
 		"en"		"Select the map"
+		"chi"		"选择地图"
 	}
 	"Autobalanced"
 	{
 		"en"		"Autobalanced"
+		"chi"		"自动平衡"
 	}
 	"IsNowReady"
 	{
 		"#format"		"{1:N}"
 		"en"		"{1} is now ready."
+		"chi"		"{1} 已准备就绪"
 	}
 	"IsNoLongerReady"
 	{
 		"#format"		"{1:N}"
 		"en"		"{1} is no longer ready."
+		"chi"		"{1} 取消了准备"
 	}
 	"SavedReadyMessage"
 	{
 		"en"		"Successfully saved custom ready message."
+		"chi"		"成功保存准备信息"
 	}
 	"PlayoutOption"
 	{
 		"en"		"Play out maxrounds"
+		"chi"		"超过了最大局数."
 	}
 	"KnifeRoundVoteStay"
 	{
 		"en"		"Recorded vote to stay"
+		"chi"		"保持不变"
 	}
 	"KnifeRoundVoteSwap"
 	{
 		"en"		"Recorded vote to swap"
+		"chi"		"双方换边"
 	}
 	"ChangeMapMessage"
 	{
 		"#format"		"{1:s}"
 		"en"		"Changing map to {GREEN}{1}{NORMAL}..."
+		"chi"		"更换地图为 {GREEN}{1}{NORMAL}..."
 	}
 	"TimeLeftInVoteHint"
 	{
 		"#format"		"{1:d}"
 		"en"		"{1} seconds left in vote..."
+		"chi"		"剩余 {1} 秒来作出选择..."
 	}
 	"IRVMenuTitle"
 	{
 		"#format"		"{1:d}"
 		"en"		"Select your #{1} choice"
+		"chi"		"选择 #{1} 作为你的选项"
 	}
 	"IRVSelectionMessage"
 	{
 		"#format"		"{1:s},{2:d}"
 		"en"		"You picked {GREEN}{1} {NORMAL}as your {GREEN}#{2} {NORMAL}choice."
+		"chi"		"你选择了 {GREEN}{1} {NORMAL}作为 {GREEN}#{2} {NORMAL}你的选项."
 	}
 	"MapVoteWinnerHintText"
 	{
 		"#format"		"{1:s}"
 		"en"		"Vote over... {1} won!"
+		"chi"		"投票结束... {1} 赢了!"
 	}
 	"IRVResultMessage"
 	{
 		"#format"		"{1:s},{2:s},{3:s}"
 		"en"		"{GREEN}{1}{NORMAL} won, {GREEN}{2}{NORMAL} came in 2nd, {GREEN}{3}{NORMAL} in 3rd"
+		"chi"		"{GREEN}{1}{NORMAL} 获胜, {GREEN}{2}{NORMAL} 将作为第二张地图, {GREEN}{3}{NORMAL} 将作为第三张地图"
+	}
+	"FriendlyFireVoteOn"
+	{
+		"#format"		"{1:N}"
+		"en"		"{1} 选择 {GREEN}开启 {NORMAL}队伤"
+		"chi"		"{1} 选择 {GREEN}开启 {NORMAL}队伤"
+	}
+	"FriendlyFireVoteOff"
+	{
+		"#format"		"{1:N}"
+		"en"		"{1} 选择 {LIGHT_RED}关闭 {NORMAL}队伤"
+		"chi"		"{1} 选择 {LIGHT_RED}关闭 {NORMAL}队伤"
+	}
+	"FriendlyFireEndOn"
+	{
+		"en"		"比赛 {GREEN}开启 {NORMAL}队伤."
+		"chi"		"比赛 {GREEN}开启 {NORMAL}队伤."
+	}
+	"FriendlyFireEndOff"
+	{
+		"en"		"比赛 {LIGHT_RED}关闭 {NORMAL}队伤，注意 {GREEN}手雷{NORMAL}、{GREEN}燃烧弹{NORMAL}、{GREEN}电击枪{NORMAL}仍有队伤."
+		"chi"		"比赛 {LIGHT_RED}关闭 {NORMAL}队伤，注意 {GREEN}手雷{NORMAL}、{GREEN}燃烧弹{NORMAL}、{GREEN}电击枪{NORMAL}仍有队伤."
+	}
+	"KnifeRoundVoteOn"
+	{
+		"#format"		"{1:N}"
+		"en"		"{1} 选择 {GREEN}开启 {NORMAL}群殴选边"
+		"chi"		"{1} 选择 {GREEN}开启 {NORMAL}群殴选边"
+	}
+	"KnifeRoundVoteOff"
+	{
+		"#format"		"{1:N}"
+		"en"		"{1} 选择 {LIGHT_RED}关闭 {NORMAL}群殴选边"
+		"chi"		"{1} 选择 {LIGHT_RED}关闭 {NORMAL}群殴选边"
+	}
+	"KnifeRoundVoteEndOn"
+	{
+		"en"		"比赛 {GREEN}开启 {NORMAL}群殴选边"
+		"chi"		"比赛 {GREEN}开启 {NORMAL}群殴选边"
+	}
+	"KnifeRoundVoteEndOff"
+	{
+		"en"		"比赛 {LIGHT_RED}关闭 {NORMAL}群殴选边"
+		"chi"		"比赛 {LIGHT_RED}关闭 {NORMAL}群殴选边"
+	
 	}
 }
