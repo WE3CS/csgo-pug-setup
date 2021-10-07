@@ -1,4 +1,4 @@
-csgo-pug-setup
+csgo-pug-setup FOR WE3CS
 ===========================
 
 [![Build status](http://ci.splewis.net/job/csgo-pug-setup/badge/icon)](http://ci.splewis.net/job/csgo-pug-setup/)
