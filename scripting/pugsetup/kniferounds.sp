@@ -1,3 +1,9 @@
+#define KNIFE_CONFIG "sourcemod/pugsetup/knife.cfg"
+
+#pragma newdecls required
+#pragma semicolon 1
+int RemoveCounter[MAXPLAYERS + 1];
+
 Handle g_KnifeCvarRestore = INVALID_HANDLE;
 
 public Action StartKnifeRound(Handle timer) {
@@ -11,14 +17,9 @@ public Action StartKnifeRound(Handle timer) {
     }
   }
 
-  // TODO: the config execution used by knife rounds (`ExecuteAndSaveCvars` function) should
-  // probably be unified with how the warmup/live/postgame cvars are executed (`ExecCfg` function).
-  char configPath[PLATFORM_MAX_PATH + 1];
-  g_KnifeConfigCvar.GetString(configPath, sizeof(configPath));
-
-  g_KnifeCvarRestore = ExecuteAndSaveCvars(configPath);
+  g_KnifeCvarRestore = ExecuteAndSaveCvars(KNIFE_CONFIG);
   if (g_KnifeCvarRestore == INVALID_HANDLE) {
-    LogError("Failed to save cvar values when executing %s", configPath);
+    LogError("Failed to save cvar values when executing %s", KNIFE_CONFIG);
   }
 
   RestartGame(1);
@@ -26,22 +27,47 @@ public Action StartKnifeRound(Handle timer) {
   for (int i = 1; i <= MaxClients; i++) {
     g_KnifeRoundVotes[i] = KnifeDecision_None;
   }
-
+  
   // This is done on a delay since the cvar changes from
   // the knife cfg execute have their own delay of when they are printed
   // into global chat.
-  CreateTimer(1.0, Timer_AnnounceKnife);
+  CreateTimer(3.0, Timer_RemoveKnife);
+  CreateTimer(2.0, Timer_AnnounceKnife);
   return Plugin_Handled;
 }
 
+public Action Timer_RemoveKnife(Handle timer) {
+for (int i = 1; i <= MaxClients; i++) {
+  if (IsClientInGame(i))
+        {
+        	RemoveCounter[i] = 0;
+        	RemoveExtraKnives(i);
+		}
+	}
+}
 public Action Timer_AnnounceKnife(Handle timer) {
   if (g_GameState != GameState_KnifeRound)
     return Plugin_Handled;
 
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 1; i++)
     PugSetup_MessageToAll("%t", "KnifeRound");
   return Plugin_Handled;
 }
+
+public void RemoveExtraKnives(int client)
+{
+	int weapon = GetPlayerWeaponSlot(client, 2);
+   	if(weapon != -1)
+			{
+				RemovePlayerItem(client, weapon);
+				// RemoveEdict(weapon);
+				GivePlayerItem(client, "weapon_taser");
+				
+				//EquipPlayerWeapon(client, itaser);
+				int iMelee = GivePlayerItem(client, "weapon_fists");
+				EquipPlayerWeapon(client, iMelee);
+			}
+}	
 
 public Action Timer_HandleKnifeDecisionVote(Handle timer) {
   HandleKnifeDecisionVote(true);
@@ -93,7 +119,6 @@ public void EndKnifeRound(bool swap) {
           SwitchPlayerTeam(i, CS_TEAM_T);
 
         } else if (IsClientCoaching(i)) {
-          team = GetCoachTeam(i);
           if (team == CS_TEAM_T) {
             UpdateCoachTarget(i, CS_TEAM_CT);
           } else if (team == CS_TEAM_CT) {
@@ -110,7 +135,7 @@ public void EndKnifeRound(bool swap) {
     CloseCvarStorage(g_KnifeCvarRestore);
     g_KnifeCvarRestore = INVALID_HANDLE;
   }
-  CreateTimer(3.0, BeginLO3, _, TIMER_FLAG_NO_MAPCHANGE);
+  CreateTimer(1.0, BeginLO3, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 static bool AwaitingDecision(int client, const char[] command) {
