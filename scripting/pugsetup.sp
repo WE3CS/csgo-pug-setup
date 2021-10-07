@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sourcemod>
 
+#include "pugsetup/globals.sp"
 #include "include/logdebug.inc"
 #include "include/pugsetup.inc"
 #include "include/restorecvars.inc"
@@ -12,7 +13,7 @@
 #include <SteamWorks>
 
 #undef REQUIRE_PLUGIN
-#include "include/updater.inc"
+#include <updater>
 #define UPDATE_URL "http://dl.whiffcity.com/plugins/pugsetup/pugsetup.txt"
 
 #define ALIAS_LENGTH 64
@@ -36,6 +37,7 @@ ConVar g_AnnounceCountdownCvar;
 ConVar g_AutoRandomizeCaptainsCvar;
 ConVar g_AutoSetupCvar;
 ConVar g_AutoUpdateCvar;
+ConVar g_PauseTime;
 ConVar g_CvarVersionCvar;
 ConVar g_DemoNameFormatCvar;
 ConVar g_DemoTimeFormatCvar;
@@ -47,7 +49,6 @@ ConVar g_ExcludeSpectatorsCvar;
 ConVar g_ExecDefaultConfigCvar;
 ConVar g_ForceDefaultsCvar;
 ConVar g_InstantRunoffVotingCvar;
-ConVar g_KnifeConfigCvar;
 ConVar g_LiveCfgCvar;
 ConVar g_MapListCvar;
 ConVar g_MapVoteTimeCvar;
@@ -65,6 +66,7 @@ ConVar g_StartDelayCvar;
 ConVar g_UseGameWarmupCvar;
 ConVar g_WarmupCfgCvar;
 ConVar g_WarmupMoneyOnSpawnCvar;
+ConVar g_PauseCount[2];
 
 /** Setup menu options **/
 bool g_DisplayMapType = true;
@@ -76,8 +78,11 @@ bool g_DisplayRecordDemo = true;
 bool g_DisplayMapChange = false;
 bool g_DisplayAimWarmup = true;
 bool g_DisplayPlayout = false;
+bool FreezeTime = true;
 
 /** Setup info **/
+int g_iPauseTime;
+int g_iPauseCount[2];
 int g_Leader = -1;
 ArrayList g_MapList;
 ArrayList g_PastMaps;
@@ -117,6 +122,7 @@ int g_LastReadyHintTime = 0;
 /** Pause information **/
 bool g_ctUnpaused = false;
 bool g_tUnpaused = false;
+bool g_bIsPauseTech;
 
 /** Custom ready messages **/
 Handle g_ReadyMessageCookie = INVALID_HANDLE;
@@ -142,9 +148,11 @@ ArrayList g_MapVotePool;
 /** Data about team selections **/
 int g_capt1 = -1;
 int g_capt2 = -1;
+int iPauseCount[2];
 int g_Teams[MAXPLAYERS + 1];
 bool g_Ready[MAXPLAYERS + 1];
 bool g_PlayerAtStart[MAXPLAYERS + 1];
+bool g_bUjePause;
 
 /** Clan tag data **/
 #define CLANTAG_LENGTH 16
@@ -239,14 +247,20 @@ public void OnPluginStart() {
   g_AutoSetupCvar =
       CreateConVar("sm_pugsetup_autosetup", "0",
                    "Whether a pug is automatically setup using the default setup options or not.");
+  g_PauseCount[0] = CreateConVar("sm_pugsetup_pause_count_t", "1", "Pause T count");
+  g_iPauseCount[0] = g_PauseCount[0].IntValue;
+  g_PauseCount[1] = CreateConVar("sm_pugsetup_pause_count_ct", "1", "Pause CT count");
+  g_iPauseCount[1] = g_PauseCount[1].IntValue;
+  g_PauseTime = CreateConVar("sm_pugsetup_pause_timer", "121", "Default pause delay");
+  g_iPauseTime = g_PauseTime.IntValue;
   g_AutoUpdateCvar = CreateConVar(
       "sm_pugsetup_autoupdate", "1",
       "Whether the plugin may (if the \"Updater\" plugin is loaded) automatically update.");
   g_DemoNameFormatCvar = CreateConVar(
-      "sm_pugsetup_demo_name_format", "pug_{TIME}_{MAP}",
+      "sm_pugsetup_demo_name_format", "pug_{MAP}_{TIME}",
       "Naming scheme for demos. You may use {MAP}, {TIME}, and {TEAMSIZE}. Make sure there are no spaces or colons in this.");
   g_DemoTimeFormatCvar = CreateConVar(
-      "sm_pugsetup_time_format", "%Y-%m-%d_%H%M",
+      "sm_pugsetup_time_format", "%Y-%m-%d_%H",
       "Time format to use when creating demo file names. Don't tweak this unless you know what you're doing! Avoid using spaces or colons.");
   g_DisplayMapVotesCvar =
       CreateConVar("sm_pugsetup_display_map_votes", "1",
@@ -271,9 +285,6 @@ public void OnPluginStart() {
   g_InstantRunoffVotingCvar = CreateConVar(
       "sm_pugsetup_instant_runoff_voting", "1",
       "If set, map votes will run instant-runoff style where each client selects their top 3 maps in preference order.");
-  g_KnifeConfigCvar = CreateConVar(
-      "sm_pugsetup_knife_cfg", "sourcemod/pugsetup/knife.cfg",
-      "Config to execute when the knife round begins. CVars set in this file are saved before execution, and reverted back to their pre-knife-config values when the game goes live, before executing the live.cfg.");
   g_LiveCfgCvar = CreateConVar("sm_pugsetup_live_cfg", "sourcemod/pugsetup/live.cfg",
                                "Config to execute when the game goes live");
   g_MapListCvar = CreateConVar(
@@ -309,7 +320,7 @@ public void OnPluginStart() {
                                     "Whether the sm_setup and sm_10man commands are enabled");
   g_SnakeCaptainsCvar = CreateConVar(
       "sm_pugsetup_snake_captain_picks", "0",
-      "If set to 0: captains pick players in a ABABABAB order. If set to 1, in a ABBAABBA order. If set to 2, in a ABBABABA order. If set to 3, in a ABBABAAB order.");
+      "If set to 0: captains pick players in a ABABABAB order. If set to 1, in a ABBAABBA order. If set to 2, in a ABBABABA order.");
   g_StartDelayCvar =
       CreateConVar("sm_pugsetup_start_delay", "5",
                    "How many seconds of a countdown phase right before the lo3 process begins.", _,
@@ -332,6 +343,9 @@ public void OnPluginStart() {
                    FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DONTRECORD);
   g_CvarVersionCvar.SetString(PLUGIN_VERSION);
 
+  HookConVarChange(g_PauseCount[0], PauseCount);
+  HookConVarChange(g_PauseCount[1], PauseCount);
+  HookConVarChange(g_PauseTime, OnTimeChange);
   HookConVarChange(g_MapListCvar, OnMapListChanged);
   HookConVarChange(g_AimMapListCvar, OnAimMapListChanged);
 
@@ -351,6 +365,8 @@ public void OnPluginStart() {
                      ChatAlias_WhenSetup);
   AddPugSetupCommand("pause", Command_Pause, "Pauses the game", Permission_All,
                      ChatAlias_WhenSetup);
+  RegAdminCmd("sm_techpause", Command_Techpause, ADMFLAG_GENERIC);
+  RegAdminCmd("sm_techunpause", Command_TechUnpause, ADMFLAG_GENERIC);
   AddPugSetupCommand("unpause", Command_Unpause, "Unpauses the game", Permission_All,
                      ChatAlias_WhenSetup);
   AddPugSetupCommand("endgame", Command_EndGame, "Pre-emptively ends the match", Permission_Leader);
@@ -413,6 +429,7 @@ public void OnPluginStart() {
   HookEvent("server_cvar", Event_CvarChanged, EventHookMode_Pre);
   HookEvent("player_connect", Event_PlayerConnect);
   HookEvent("player_disconnect", Event_PlayerDisconnect);
+  HookEvent("round_freeze_end", Event_Round_Freeze_End);
 
   g_OnForceEnd = CreateGlobalForward("PugSetup_OnForceEnd", ET_Ignore, Param_Cell);
   g_hOnGoingLive = CreateGlobalForward("PugSetup_OnGoingLive", ET_Ignore);
@@ -483,6 +500,22 @@ static void AddPugSetupCommand(const char[] command, ConCmd callback, const char
   PugSetup_AddChatAlias(dotCommandBuffer, smCommandBuffer, mode);
 }
 
+public void PauseCount(ConVar convar, const char[] oldValue, const char[] newValue) {
+if (convar == g_PauseCount[0])
+{
+g_iPauseCount[0] = convar.IntValue;
+}
+else if (convar == g_PauseCount[1])
+{
+g_iPauseCount[1] = convar.IntValue;
+}
+}
+
+public void OnTimeChange(ConVar convar, const char[] oldValue, const char[] newValue) {
+g_PauseTime = convar;
+g_iPauseTime = g_PauseTime.IntValue;
+}
+
 public void OnMapListChanged(ConVar convar, const char[] oldValue, const char[] newValue) {
   if (!StrEqual(oldValue, newValue)) {
     FillMapList(g_MapListCvar, g_MapList);
@@ -527,7 +560,11 @@ public void OnClientDisconnect_Post(int client) {
   }
 }
 
+
 public void OnMapStart() {
+  iPauseCount[0] = 0;
+  iPauseCount[1] = 0;
+  
   if (g_SwitchingMaps) {
     g_SwitchingMaps = false;
   }
@@ -595,9 +632,7 @@ public Action Timer_CheckReady(Handle timer) {
     }
   }
 
-  int neededPlayers = PugSetup_GetPugMaxPlayers();
-
-  if (totalPlayers >= neededPlayers) {
+  if (totalPlayers >= PugSetup_GetPugMaxPlayers()) {
     GiveReadyHints();
   }
 
@@ -610,8 +645,6 @@ public Action Timer_CheckReady(Handle timer) {
       if (g_TeamType == TeamType_Captains) {
         if (IsPlayer(g_capt1) && IsPlayer(g_capt2) && g_capt1 != g_capt2) {
           g_LiveTimerRunning = false;
-          PrintHintTextToAll("%t\n%t", "ReadyStatusPlayers", readyPlayers, neededPlayers,
-                             "ReadyStatusAllReadyPick");
           CreateTimer(1.0, StartPicking, _, TIMER_FLAG_NO_MAPCHANGE);
           return Plugin_Stop;
         } else {
@@ -619,15 +652,6 @@ public Action Timer_CheckReady(Handle timer) {
         }
       } else {
         g_LiveTimerRunning = false;
-
-        if (g_AutoLive) {
-          PrintHintTextToAll("%t\n%t", "ReadyStatusPlayers", readyPlayers, neededPlayers,
-                             "ReadyStatusAllReady");
-        } else {
-          PrintHintTextToAll("%t\n%t", "ReadyStatusPlayers", readyPlayers, neededPlayers,
-                             "ReadyStatusAllReadyWaiting");
-        }
-
         ReadyToStart();
         return Plugin_Stop;
       }
@@ -636,8 +660,6 @@ public Action Timer_CheckReady(Handle timer) {
       if (g_MapType == MapType_Veto) {
         if (IsPlayer(g_capt1) && IsPlayer(g_capt2) && g_capt1 != g_capt2) {
           g_LiveTimerRunning = false;
-          PrintHintTextToAll("%t\n%t", "ReadyStatusPlayers", readyPlayers, neededPlayers,
-                             "ReadyStatusAllReadyVeto");
           PugSetup_MessageToAll("%t", "VetoMessage");
           CreateTimer(2.0, MapSetup, _, TIMER_FLAG_NO_MAPCHANGE);
           return Plugin_Stop;
@@ -647,8 +669,6 @@ public Action Timer_CheckReady(Handle timer) {
 
       } else {
         g_LiveTimerRunning = false;
-        PrintHintTextToAll("%t\n%t", "ReadyStatusPlayers", readyPlayers, neededPlayers,
-                           "ReadyStatusAllReadyVote");
         PugSetup_MessageToAll("%t", "VoteMessage");
         CreateTimer(2.0, MapSetup, _, TIMER_FLAG_NO_MAPCHANGE);
         return Plugin_Stop;
@@ -665,7 +685,7 @@ public Action Timer_CheckReady(Handle timer) {
   Call_Finish();
 
   if (g_TeamType == TeamType_Captains && g_AutoRandomizeCaptainsCvar.IntValue != 0 &&
-      totalPlayers >= neededPlayers) {
+      totalPlayers >= PugSetup_GetPugMaxPlayers()) {
     // re-randomize captains if they aren't set yet
     if (!IsPlayer(g_capt1)) {
       g_capt1 = RandomPlayer();
@@ -840,7 +860,7 @@ public Action Command_10man(int client, int args) {
     g_Leader = client;
   }
 
-  PugSetup_SetupGame(TeamType_Captains, MapType_Vote, 5, g_RecordGameOption, g_DoKnifeRound,
+  PugSetup_SetupGame(TeamType_Manual, MapType_Current, 5, g_RecordGameOption, g_DoKnifeRound,
                      g_AutoLive);
   return Plugin_Handled;
 }
@@ -1003,15 +1023,23 @@ public void LoadExtraAliases() {
   PugSetup_AddChatAlias(".captains", "sm_capt", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".setcaptains", "sm_capt", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".endmatch", "sm_endgame", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".end", "sm_endgame", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".fend", "sm_forceend", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".cancel", "sm_endgame", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".r", "sm_ready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".gaben", "sm_ready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".gs4lyfe", "sm_ready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".splewis", "sm_ready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".unready", "sm_notready", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".ur", "sm_notready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".paws", "sm_pause", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".p", "sm_pause", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".unpaws", "sm_unpause", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".up", "sm_unpause", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".switch", "sm_swap", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".forcestop", "sm_forceend", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".fstart", "sm_forcestart", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".10", "sm_10man", ChatAlias_WhenSetup);
 }
 
 static void AddTranslatedAlias(const char[] command, ChatAliasMode mode = ChatAlias_Always) {
@@ -1110,13 +1138,13 @@ public void OnClientSayCommand_Post(int client, const char[] command, const char
     const int msgSize = 128;
     ArrayList msgs = new ArrayList(msgSize);
 
-    msgs.PushString("{LIGHT_GREEN}.setup {NORMAL}begins the setup phase");
-    msgs.PushString("{LIGHT_GREEN}.endgame {NORMAL}ends the match");
-    msgs.PushString("{LIGHT_GREEN}.leader {NORMAL}allows you to set the pug leader");
-    msgs.PushString("{LIGHT_GREEN}.capt {NORMAL}allows you to set team captains");
-    msgs.PushString("{LIGHT_GREEN}.rand {NORMAL}selects random captains");
-    msgs.PushString("{LIGHT_GREEN}.ready/.notready {NORMAL}mark you as ready");
-    msgs.PushString("{LIGHT_GREEN}.pause/.unpause {NORMAL}pause the match");
+    msgs.PushString("{LIGHT_GREEN}.setup {NORMAL}打开比赛配置菜单");
+    msgs.PushString("{LIGHT_GREEN}.endgame {NORMAL}结束比赛");
+    msgs.PushString("{LIGHT_GREEN}.leader {NORMAL}设置发起人");
+    msgs.PushString("{LIGHT_GREEN}.capt {NORMAL}设置队长");
+    msgs.PushString("{LIGHT_GREEN}.rand {NORMAL}随机队长");
+    msgs.PushString("{LIGHT_GREEN}.ready/.notready {NORMAL}准备就绪/未准备");
+    msgs.PushString("{LIGHT_GREEN}.pause/.unpause {NORMAL}暂停/恢复比赛");
 
     bool block = false;
     Call_StartForward(g_hOnHelpCommand);
@@ -1249,83 +1277,151 @@ static bool Pauseable() {
   return g_GameState >= GameState_KnifeRound && g_PausingEnabledCvar.IntValue != 0;
 }
 
-public Action Command_Pause(int client, int args) {
-  if (g_GameState == GameState_None)
-    return Plugin_Handled;
+public Action Command_Techpause(int client, int args)
+{
+if (g_GameState == GameState_None)
+return Plugin_Handled;
 
-  if (!Pauseable() || IsPaused())
-    return Plugin_Handled;
+if (!Pauseable() || IsPaused())
+	return Plugin_Handled;
 
-  if (g_MutualUnpauseCvar.IntValue != 0) {
-    PugSetup_SetPermissions("sm_pause", Permission_All);
-  }
+Pause();
+PugSetup_MessageToAll(" \x03技术暂停.");
+g_bIsPauseTech = true;
 
-  if (!DoPermissionCheck(client, "sm_pause")) {
-    if (IsValidClient(client))
-      PugSetup_Message(client, "%t", "NoPermission");
-    return Plugin_Handled;
-  }
+return Plugin_Handled;
+}
 
-  g_ctUnpaused = false;
-  g_tUnpaused = false;
-  Pause();
-  if (IsPlayer(client)) {
-    PugSetup_MessageToAll("%t", "Pause", client);
-  }
+public Action Command_TechUnpause(int client, int args)
+{
+if (g_GameState == GameState_None)
+return Plugin_Handled;
 
-  return Plugin_Handled;
+if (!IsPaused())
+	return Plugin_Handled;
+
+Unpause();
+PugSetup_MessageToAll(" \x03技术暂停结束，恢复比赛.");
+
+return Plugin_Handled;
+}
+
+public Action Command_Pause(int client, int args)
+{
+if (g_GameState == GameState_None)
+return Plugin_Handled;
+
+if (!Pauseable() || IsPaused() || g_bUjePause)
+	return Plugin_Handled;
+
+if (g_MutualUnpauseCvar.IntValue != 0) {
+	PugSetup_SetPermissions("sm_pause", Permission_All);
+}
+
+if (!DoPermissionCheck(client, "sm_pause")) {
+	if (IsValidClient(client))
+		PugSetup_Message(client, "%t", "NoPermission");
+	return Plugin_Handled;
+}
+
+int iTeam = GetClientTeam(client)-2;
+
+if (iPauseCount[iTeam] >= g_iPauseCount[iTeam])
+{
+	PugSetup_Message(client, " \x03队伍暂停次数已用完.");
+	return Plugin_Handled;
+}
+
+g_ctUnpaused = false;
+g_tUnpaused = false;
+Pause();
+iPauseCount[iTeam]++;
+
+if ((g_GameState == view_as<GameState>(8)) && (FreezeTime == true))
+{
+	g_iPauseTime = g_PauseTime.IntValue;
+	CreateTimer(1.0, UnpauseTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	g_bUjePause = true;
+}
+
+if (IsPlayer(client)) {
+	PugSetup_MessageToAll("%t", "Pause", client);
+}
+
+return Plugin_Handled;
+}
+
+public Action UnpauseTimer(Handle hTimer)
+{
+if (g_GameState == GameState_None || !IsPaused())
+return Plugin_Stop;
+
+if (g_iPauseTime-- > 0)
+{
+	PrintCenterTextAll("比赛暂停剩余时间 %i 秒", g_iPauseTime);
+}
+else
+{
+	ServerCommand("mp_unpause_match");
+	PugSetup_MessageToAll(" \x03暂停超时，恢复比赛.");
+	g_iPauseTime = g_PauseTime.IntValue;
+	g_bUjePause = false;
+	return Plugin_Stop;
+}
+
+return Plugin_Continue;
 }
 
 public Action Command_Unpause(int client, int args) {
-  if (g_GameState == GameState_None)
-    return Plugin_Handled;
+if (g_GameState == GameState_None)
+return Plugin_Handled;
 
-  if (!IsPaused())
-    return Plugin_Handled;
+if (!IsPaused())
+	return Plugin_Handled;
 
-  if (g_MutualUnpauseCvar.IntValue != 0) {
-    PugSetup_SetPermissions("sm_unpause", Permission_All);
-  }
+if (g_MutualUnpauseCvar.IntValue != 0) {
+	PugSetup_SetPermissions("sm_unpause", Permission_All);
+}
 
-  if (!DoPermissionCheck(client, "sm_unpause")) {
-    if (IsValidClient(client))
-      PugSetup_Message(client, "%t", "NoPermission");
-    return Plugin_Handled;
-  }
+if (!DoPermissionCheck(client, "sm_unpause")) {
+	if (IsValidClient(client))
+		PugSetup_Message(client, "%t", "NoPermission");
+	return Plugin_Handled;
+}
 
-  char unpauseCmd[ALIAS_LENGTH];
-  FindAliasFromCommand("sm_unpause", unpauseCmd);
+char unpauseCmd[ALIAS_LENGTH];
+FindAliasFromCommand("sm_unpause", unpauseCmd);
 
-  if (g_MutualUnpauseCvar.IntValue == 0) {
-    Unpause();
-    if (IsPlayer(client)) {
-      PugSetup_MessageToAll("%t", "Unpause", client);
-    }
-  } else {
-    // Let console force unpause
-    if (client == 0) {
-      Unpause();
-    } else {
-      int team = GetClientTeam(client);
-      if (team == CS_TEAM_T)
-        g_tUnpaused = true;
-      else if (team == CS_TEAM_CT)
-        g_ctUnpaused = true;
+if (g_MutualUnpauseCvar.IntValue == 0) {
+	Unpause();
+	if (IsPlayer(client)) {
+		PugSetup_MessageToAll("%t", "Unpause", client);
+	}
+} else {
+	// Let console force unpause
+	if (client == 0) {
+		Unpause();
+	} else {
+		int team = GetClientTeam(client);
+		if (team == CS_TEAM_T)
+			g_tUnpaused = true;
+		else if (team == CS_TEAM_CT)
+			g_ctUnpaused = true;
 
-      if (g_tUnpaused && g_ctUnpaused) {
-        Unpause();
-        if (IsPlayer(client)) {
-          PugSetup_MessageToAll("%t", "Unpause", client);
-        }
-      } else if (g_tUnpaused && !g_ctUnpaused) {
-        PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "T", "CT", unpauseCmd);
-      } else if (!g_tUnpaused && g_ctUnpaused) {
-        PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "CT", "T", unpauseCmd);
-      }
-    }
-  }
+		if (g_tUnpaused && g_ctUnpaused) {
+			Unpause();
+			if (IsPlayer(client)) {
+				PugSetup_MessageToAll("%t", "Unpause", client);
+			}
+		} else if (g_tUnpaused && !g_ctUnpaused) {
+			PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "T", "CT", unpauseCmd);
+		} else if (!g_tUnpaused && g_ctUnpaused) {
+			PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "CT", "T", unpauseCmd);
+		}
+	}
+}
 
-  return Plugin_Handled;
+return Plugin_Handled;
 }
 
 public Action Command_Ready(int client, int args) {
@@ -1607,8 +1703,16 @@ public Action Timer_EndMatch(Handle timer) {
   EndMatch(false, false);
 }
 
-public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast) {
-  CheckAutoSetup();
+public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+if (FreezeTime == false){
+FreezeTime = true;
+}
+g_iPauseTime = g_PauseTime.IntValue;
+if (IsPaused() && !g_bIsPauseTech && !g_bUjePause)
+CreateTimer(1.0, UnpauseTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+
+CheckAutoSetup();
 }
 
 public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast) {
@@ -1663,6 +1767,12 @@ public Action Event_PlayerDisconnect(Event event, const char[] name, bool dontBr
     g_capt1 = -1;
   if (g_capt2 == client)
     g_capt2 = -1;
+}
+
+public Action Event_Round_Freeze_End(Handle event, const char[]name, bool dontBroadcast) {
+if (FreezeTime == true){
+	FreezeTime = false;
+	}
 }
 
 /**
@@ -1725,18 +1835,144 @@ public void PrintSetupInfo(int client) {
   }
 }
 
+// Add teamhit vote by Bone =========start
+public int TeamHitMenuHandler(Menu menu, MenuAction action, int clientOrResult, int selection)
+{
+	switch(action)
+	{
+		case MenuAction_Select:
+		{
+      int client = clientOrResult;
+      char info[5];
+      menu.GetItem(selection, info, sizeof(info));
+      if (StrEqual(info, "on"))
+      {
+        PugSetup_MessageToAll("%T", "FriendlyFireVoteOn", LANG_SERVER, client);
+      }
+      else if(StrEqual(info, "off"))
+      {
+        PugSetup_MessageToAll("%T", "FriendlyFireVoteOff", LANG_SERVER, client);
+      }
+		}
+		case MenuAction_VoteEnd:
+		{
+      int result = clientOrResult;
+      char info[5];
+      menu.GetItem(result, info, sizeof(info));
+      if (StrEqual(info, "on"))
+      {
+        PugSetup_MessageToAll("%T", "FriendlyFireEndOn", LANG_SERVER);
+        g_EnableFriendlyFire = true;
+      }
+      else if(StrEqual(info, "off"))
+      {
+        PugSetup_MessageToAll("%T", "FriendlyFireEndOff", LANG_SERVER);
+        g_EnableFriendlyFire = false;
+      }
+	  ReadyToStartVoteKnifeRound();
+		}
+		case MenuAction_End:
+		{
+			CloseHandle(menu);
+		}
+	}
+
+	return 0;
+}
+// Add teamhit vote by Bone =========end
+
 public void ReadyToStart() {
   Call_StartForward(g_hOnReadyToStart);
   Call_Finish();
 
-  if (g_AutoLive) {
-    CreateCountDown();
-  } else {
-    ChangeState(GameState_WaitingForStart);
-    CreateTimer(float(START_COMMAND_HINT_TIME), Timer_StartCommandHint);
-    GiveStartCommandHint();
-  }
+  // Add teamhit vote by Bone =========start
+   if (IsVoteInProgress())
+    {
+        return;
+    }
+  
+  Menu teamHitMenu = new Menu(TeamHitMenuHandler);
+  teamHitMenu.SetTitle("是否开启队伤");
+  teamHitMenu.AddItem("off", "关闭");
+  teamHitMenu.AddItem("on", "开启");
+  teamHitMenu.ExitButton = false;
+  teamHitMenu.DisplayVoteToAll(20);
 }
+
+// Add kniferound vote by xx =========start
+public int KnifeRoundMenuHandler(Menu menu, MenuAction action, int clientOrResult, int selection)
+{
+	switch(action)
+	{
+		case MenuAction_Select:
+		{
+      int client = clientOrResult;
+      char info[5];
+      menu.GetItem(selection, info, sizeof(info));
+      if (StrEqual(info, "on"))
+      {
+        PugSetup_MessageToAll("%T", "KnifeRoundVoteOn", LANG_SERVER, client);
+      }
+      else if(StrEqual(info, "off"))
+      {
+        PugSetup_MessageToAll("%T", "KnifeRoundVoteOff", LANG_SERVER, client);
+      }
+		}
+		case MenuAction_VoteEnd:
+		{
+      int result = clientOrResult;
+      char info[5];
+      menu.GetItem(result, info, sizeof(info));
+      if (StrEqual(info, "on"))
+      {
+        PugSetup_MessageToAll("%T", "KnifeRoundVoteEndOn", LANG_SERVER);
+        //ChangeState(GameState_KnifeRound);
+		CreateTimer(1.0, StartKnifeRound, _, TIMER_FLAG_NO_MAPCHANGE);
+      }
+      else if(StrEqual(info, "off"))
+      {
+        PugSetup_MessageToAll("%T", "KnifeRoundVoteEndOff", LANG_SERVER);
+		ServerCommand("exec live_go.cfg");
+        //ChangeState(GameState_GoingLive);
+		CreateTimer(1.0, BeginLO3, _, TIMER_FLAG_NO_MAPCHANGE);
+      }
+
+      //if (g_AutoLive) {
+      //  CreateCountDown();
+      //} else {
+      //  ChangeState(GameState_WaitingForStart);
+      //  CreateTimer(float(START_COMMAND_HINT_TIME), Timer_StartCommandHint);
+      //  GiveStartCommandHint();
+      //}
+     
+		}
+		case MenuAction_End:
+		{
+			CloseHandle(menu);
+		}
+	}
+
+	return 0;
+}
+
+public void ReadyToStartVoteKnifeRound() {
+  Call_StartForward(g_hOnReadyToStart);
+  Call_Finish();
+
+  // Add teamhit vote by Bone =========start
+   if (IsVoteInProgress())
+    {
+        return;
+    }
+  
+  Menu teamHitMenu = new Menu(KnifeRoundMenuHandler);
+  teamHitMenu.SetTitle("是否开启群殴选边");
+  teamHitMenu.AddItem("off", "不需要");
+  teamHitMenu.AddItem("on", "需要");
+  teamHitMenu.ExitButton = false;
+  teamHitMenu.DisplayVoteToAll(20);
+}
+// Add kniferound vote by xx =========end
 
 static void GiveStartCommandHint() {
   char startCmd[ALIAS_LENGTH];
@@ -1861,7 +2097,7 @@ public void StartGame() {
     ScrambleTeams();
   }
 
-  CreateTimer(3.0, Timer_BeginMatch);
+  CreateTimer(1.0, Timer_BeginMatch);
   ExecGameConfigs();
   if (InWarmup()) {
     EndWarmup();
@@ -1871,10 +2107,10 @@ public void StartGame() {
 public Action Timer_BeginMatch(Handle timer) {
   if (g_DoKnifeRound) {
     ChangeState(GameState_KnifeRound);
-    CreateTimer(3.0, StartKnifeRound, _, TIMER_FLAG_NO_MAPCHANGE);
+    CreateTimer(1.0, StartKnifeRound, _, TIMER_FLAG_NO_MAPCHANGE);
   } else {
     ChangeState(GameState_GoingLive);
-    CreateTimer(3.0, BeginLO3, _, TIMER_FLAG_NO_MAPCHANGE);
+    CreateTimer(1.0, BeginLO3, _, TIMER_FLAG_NO_MAPCHANGE);
   }
 }
 
@@ -2148,9 +2384,9 @@ stock void UpdateClanTag(int client, bool strip = false) {
     if (g_ExcludeSpectatorsCvar.IntValue == 0 || team == CS_TEAM_CT || team == CS_TEAM_T) {
       char tag[32];
       if (g_Ready[client]) {
-        Format(tag, sizeof(tag), "%T", "Ready", LANG_SERVER);
+        Format(tag, sizeof(tag), "%T", "Ready", client);
       } else {
-        Format(tag, sizeof(tag), "%T", "NotReady", LANG_SERVER);
+        Format(tag, sizeof(tag), "%T", "NotReady", client);
       }
       CS_SetClientClanTag(client, tag);
     } else {
