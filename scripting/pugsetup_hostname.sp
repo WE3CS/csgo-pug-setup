@@ -53,7 +53,7 @@ public void PugSetup_OnReadyToStartCheck(int readyPlayers, int totalPlayers) {
   int need = PugSetup_GetPugMaxPlayers() - totalPlayers;
 
   if (need >= 1) {
-    Format(hostname, sizeof(hostname), "%s [NEED %d]", g_HostName, need);
+    Format(hostname, sizeof(hostname), "%s [还差 %d 人]", g_HostName, need);
   } else {
     Format(hostname, sizeof(hostname), "%s", g_HostName);
   }
@@ -66,7 +66,7 @@ public void PugSetup_OnGoingLive() {
     return;
 
   char hostname[MAX_HOST_LENGTH];
-  Format(hostname, sizeof(hostname), "%s [LIVE]", g_HostName);
+  Format(hostname, sizeof(hostname), "%s [正在比赛]", g_HostName);
   g_HostnameCvar.SetString(hostname);
 }
 
@@ -75,7 +75,7 @@ public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcas
     return Plugin_Continue;
 
   char hostname[MAX_HOST_LENGTH];
-  Format(hostname, sizeof(hostname), "%s [LIVE %d-%d]", g_HostName, CS_GetTeamScore(CS_TEAM_CT),
+  Format(hostname, sizeof(hostname), "%s [正在比赛 %d-%d]", g_HostName, CS_GetTeamScore(CS_TEAM_CT),
          CS_GetTeamScore(CS_TEAM_T));
   g_HostnameCvar.SetString(hostname);
 
