@@ -1926,13 +1926,23 @@ public int KnifeRoundMenuHandler(Menu menu, MenuAction action, int clientOrResul
       if (StrEqual(info, "on"))
       {
         PugSetup_MessageToAll("%T", "KnifeRoundVoteEndOn", LANG_SERVER);
-        //ChangeState(GameState_KnifeRound);
-		CreateTimer(1.0, StartKnifeRound, _, TIMER_FLAG_NO_MAPCHANGE);
+        ChangeState(GameState_KnifeRound);
+		if (g_AutoLive) {
+        CreateCountDown();
+      } else {
+        ChangeState(GameState_WaitingForStart);
+        CreateTimer(float(START_COMMAND_HINT_TIME), Timer_StartCommandHint);
+        GiveStartCommandHint();
+      }
+		
+		//CreateTimer(1.0, StartKnifeRound, _, TIMER_FLAG_NO_MAPCHANGE);
+
       }
       else if(StrEqual(info, "off"))
       {
         PugSetup_MessageToAll("%T", "KnifeRoundVoteEndOff", LANG_SERVER);
 		ServerCommand("exec live_go.cfg");
+		//ChangeState(GameState_Live);
         //ChangeState(GameState_GoingLive);
 		CreateTimer(1.0, BeginLO3, _, TIMER_FLAG_NO_MAPCHANGE);
       }
@@ -1942,7 +1952,7 @@ public int KnifeRoundMenuHandler(Menu menu, MenuAction action, int clientOrResul
       //} else {
       //  ChangeState(GameState_WaitingForStart);
       //  CreateTimer(float(START_COMMAND_HINT_TIME), Timer_StartCommandHint);
-      //  GiveStartCommandHint();
+        
       //}
      
 		}
