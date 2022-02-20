@@ -5,7 +5,7 @@ csgo-pug-setup
 [![GitHub Downloads](https://img.shields.io/github/downloads/splewis/csgo-pug-setup/total.svg?style=flat-square&label=Downloads)](https://github.com/splewis/csgo-pug-setup/releases/latest)
 
 **插件作者：[Splewis](https://github.com/splewis/)**
-**部分代码来自中国大佬[BoneTM](https://github.com/bonetm/).**
+**部分代码来自中国[GOD社区](https://csgod.top/)大佬[BoneTM](https://github.com/bonetm/).**
 
 **Status: Supported.**
 
