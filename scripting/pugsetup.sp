@@ -2,6 +2,8 @@
 #include <cstrike>
 #include <sdktools>
 #include <sourcemod>
+#include <regex>
+#include <customvotes>
 
 #include "pugsetup/globals.sp"
 #include "include/logdebug.inc"
@@ -862,6 +864,7 @@ public Action Command_10man(int client, int args) {
 
   PugSetup_SetupGame(TeamType_Manual, MapType_Current, 5, g_RecordGameOption, g_DoKnifeRound,
                      g_AutoLive);
+			 
   return Plugin_Handled;
 }
 
@@ -1031,7 +1034,7 @@ public void LoadExtraAliases() {
   PugSetup_AddChatAlias(".gs4lyfe", "sm_ready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".splewis", "sm_ready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".unready", "sm_notready", ChatAlias_WhenSetup);
-  PugSetup_AddChatAlias(".ur", "sm_notready", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".nr", "sm_notready", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".paws", "sm_pause", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".p", "sm_pause", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".unpaws", "sm_unpause", ChatAlias_WhenSetup);
@@ -1039,7 +1042,7 @@ public void LoadExtraAliases() {
   PugSetup_AddChatAlias(".switch", "sm_swap", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".forcestop", "sm_forceend", ChatAlias_WhenSetup);
   PugSetup_AddChatAlias(".fstart", "sm_forcestart", ChatAlias_WhenSetup);
-  PugSetup_AddChatAlias(".10", "sm_10man", ChatAlias_WhenSetup);
+  PugSetup_AddChatAlias(".10man", "sm_10man", ChatAlias_WhenSetup);
 }
 
 static void AddTranslatedAlias(const char[] command, ChatAliasMode mode = ChatAlias_Always) {
@@ -1139,12 +1142,13 @@ public void OnClientSayCommand_Post(int client, const char[] command, const char
     ArrayList msgs = new ArrayList(msgSize);
 
     msgs.PushString("{LIGHT_GREEN}.setup {NORMAL}打开比赛配置菜单");
-    msgs.PushString("{LIGHT_GREEN}.endgame {NORMAL}结束比赛");
+	msgs.PushString("{LIGHT_GREEN}.fstart {NORMAL}强制开始比赛");
+    msgs.PushString("{LIGHT_GREEN}.end {NORMAL}结束比赛");
     msgs.PushString("{LIGHT_GREEN}.leader {NORMAL}设置发起人");
     msgs.PushString("{LIGHT_GREEN}.capt {NORMAL}设置队长");
     msgs.PushString("{LIGHT_GREEN}.rand {NORMAL}随机队长");
-    msgs.PushString("{LIGHT_GREEN}.ready/.notready {NORMAL}准备就绪/未准备");
-    msgs.PushString("{LIGHT_GREEN}.pause/.unpause {NORMAL}暂停/恢复比赛");
+    msgs.PushString("{LIGHT_GREEN}.ready/.notready{NORMAL}或{LIGHT_GREEN}.r/.nr {NORMAL}准备就绪/未准备");
+    msgs.PushString("{LIGHT_GREEN}.pause/.unpause{NORMAL}或{LIGHT_GREEN}.p/.up {NORMAL}暂停/恢复比赛");
 
     bool block = false;
     Call_StartForward(g_hOnHelpCommand);
@@ -1372,12 +1376,15 @@ else
 return Plugin_Continue;
 }
 
+//================================[ Unpause ]================================//
 public Action Command_Unpause(int client, int args) {
 if (g_GameState == GameState_None)
 return Plugin_Handled;
 
-if (!IsPaused())
+if (!IsPaused()){
+	PugSetup_MessageToAll(" \x03当前不在暂停中.");
 	return Plugin_Handled;
+	}
 
 if (g_MutualUnpauseCvar.IntValue != 0) {
 	PugSetup_SetPermissions("sm_unpause", Permission_All);
@@ -1388,41 +1395,90 @@ if (!DoPermissionCheck(client, "sm_unpause")) {
 		PugSetup_Message(client, "%t", "NoPermission");
 	return Plugin_Handled;
 }
-
-char unpauseCmd[ALIAS_LENGTH];
-FindAliasFromCommand("sm_unpause", unpauseCmd);
-
-if (g_MutualUnpauseCvar.IntValue == 0) {
-	Unpause();
-	if (IsPlayer(client)) {
-		PugSetup_MessageToAll("%t", "Unpause", client);
-	}
-} else {
-	// Let console force unpause
-	if (client == 0) {
-		Unpause();
-	} else {
-		int team = GetClientTeam(client);
-		if (team == CS_TEAM_T)
-			g_tUnpaused = true;
-		else if (team == CS_TEAM_CT)
-			g_ctUnpaused = true;
-
-		if (g_tUnpaused && g_ctUnpaused) {
-			Unpause();
-			if (IsPlayer(client)) {
-				PugSetup_MessageToAll("%t", "Unpause", client);
-			}
-		} else if (g_tUnpaused && !g_ctUnpaused) {
-			PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "T", "CT", unpauseCmd);
-		} else if (!g_tUnpaused && g_ctUnpaused) {
-			PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "CT", "T", unpauseCmd);
-		}
-	}
+if (CustomVotes_IsVoteInProgress()) {
+	PugSetup_MessageToAll(" \x03已有人发起投票.");
+    return Plugin_Handled;
+    }
+    CustomVoteSetup setup;
+    
+    setup.team = CS_TEAM_NONE;
+    setup.initiator = client;
+    setup.issue_id = VOTE_ISSUE_UNPAUSEMATCH;
+    setup.dispstr = "是否取消暂停？";
+    setup.disppass = "<font color='#3df218'>投票通过，立即取消暂停!</font>";
+	setup.pass_percentage = 100;
+    
+    CustomVotes_Execute(setup, 5, Handler_CustomVotePassed, Handler_CustomVoteFailed);
+	
+    
+    return Plugin_Handled;
+}
+public void Handler_CustomVotePassed(int results[MAXPLAYERS+1])
+{
+	ServerCommand("mp_unpause_match");
+	g_bUjePause = false;
+    //PrintToChatAll("[\x06我为C狂\x01] \x03投票通过，立即取消暂停.");
+	PugSetup_MessageToAll(" \x03投票通过，立即取消暂停.");
 }
 
-return Plugin_Handled;
+public void Handler_CustomVoteFailed(int results[MAXPLAYERS+1], int client)
+{
+    //PrintToChatAll("[\x06我为C狂\x01] \x03投票未通过.");
+	PugSetup_MessageToAll(" \x03投票未通过.");
 }
+//================================[ Unpause ]================================//
+
+//public Action Command_Unpause(int client, int args) {
+//if (g_GameState == GameState_None)
+//return Plugin_Handled;
+
+//if (!IsPaused())
+//	return Plugin_Handled;
+
+//if (g_MutualUnpauseCvar.IntValue != 0) {
+//	PugSetup_SetPermissions("sm_unpause", Permission_All);
+//}
+
+//if (!DoPermissionCheck(client, "sm_unpause")) {
+//	if (IsValidClient(client))
+//		PugSetup_Message(client, "%t", "NoPermission");
+//	return Plugin_Handled;
+//}
+
+//char unpauseCmd[ALIAS_LENGTH];
+//FindAliasFromCommand("sm_unpause", unpauseCmd);
+
+//if (g_MutualUnpauseCvar.IntValue == 0) {
+//	Unpause();
+//	if (IsPlayer(client)) {
+//		PugSetup_MessageToAll("%t", "Unpause", client);
+//	}
+//} else {
+//	// Let console force unpause
+//	if (client == 0) {
+//		Unpause();
+//	} else {
+//		int team = GetClientTeam(client);
+//		if (team == CS_TEAM_T)
+//			g_tUnpaused = true;
+//		else if (team == CS_TEAM_CT)
+//			g_ctUnpaused = true;
+
+//		if (g_tUnpaused && g_ctUnpaused) {
+//			Unpause();
+//			if (IsPlayer(client)) {
+//				PugSetup_MessageToAll("%t", "Unpause", client);
+//			}
+//		} else if (g_tUnpaused && !g_ctUnpaused) {
+//			PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "T", "CT", unpauseCmd);
+//		} else if (!g_tUnpaused && g_ctUnpaused) {
+//			PugSetup_MessageToAll("%t", "MutualUnpauseMessage", "CT", "T", unpauseCmd);
+//		}
+//	}
+//}
+
+//return Plugin_Handled;
+//}
 
 public Action Command_Ready(int client, int args) {
   if (!DoPermissionCheck(client, "sm_ready")) {
@@ -1952,7 +2008,7 @@ public int KnifeRoundMenuHandler(Menu menu, MenuAction action, int clientOrResul
       //} else {
       //  ChangeState(GameState_WaitingForStart);
       //  CreateTimer(float(START_COMMAND_HINT_TIME), Timer_StartCommandHint);
-        
+      //  GiveStartCommandHint();
       //}
      
 		}
